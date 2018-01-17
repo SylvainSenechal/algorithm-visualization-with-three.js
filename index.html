@@ -1,0 +1,199 @@
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<div id="jeu"></div>
+		<style>
+			#jeu {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background: linear-gradient(#e4e0ba, #f7d9aa); /* première valeur en haut, deuxième qui s'étend vers le bas */
+				/*cursor : none;*/
+			}
+			html, body {
+		      margin: 0px;
+		      border: 0px;
+		      overflow: hidden; /*  Disable scrollbars */
+		      display: block;  /* No floating content on sides */
+		    }
+
+		</style>
+	</head>
+	<body>
+	</body>
+</html>
+
+<script type="text/javascript" src="threejs.js"></script>
+<script src="stats/build/stats.min.js"></script>
+
+<script> // ajouter stats.min.js.com </script>
+
+
+<script>
+	// Couleur violette :background: linear-gradient(#8416c3, #4e146f);
+	// le fog doit avoir la même couleur que le background pour être propre
+</script>
+
+
+<script>
+// IDEES 
+// encapsuler tout l'algo dans une box full transparente pour pouvoir déplacer en bloc avec un raycaster pour détecter quand la souris arrive sur ce bloc et faire un drag&drop
+var stats = new Stats();
+stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom ); 
+
+
+var sizeBox = 5;
+var sizeArray = 20;
+function arrayBox(){
+	this.group = new THREE.Group();
+	//this.mesh = new THREE.Object3D();
+
+	var geometry = new THREE.BoxGeometry(sizeBox, sizeBox, sizeBox);
+
+	var material = new THREE.MeshPhongMaterial({
+		color: 0x68c3c0,
+		transparent:true,
+		opacity:0.5,
+		vertexColors: THREE.FaceColors,
+		shading:THREE.FlatShading,
+		side: THREE.DoubleSide,
+		//emissive: 0x0000ff
+	});
+
+	for(i = 0; i<sizeArray; i++){
+		var box = new THREE.Mesh(geometry, material);
+
+		box.position.x = i*sizeBox; // + i; ?
+		//box.castShadow = true;
+		//box.receiveShadow = true;
+		this.group.add(box);
+	}
+}
+
+var array;
+function createBox(){
+	array = new arrayBox();
+	scene.add(array.group);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+window.addEventListener('load', init, false); // voir l'argument false ?
+
+function resize(){
+	height = window.innerHeight;
+	width = window.innerWidth;
+	camera.aspect = width / height;
+	camera.updateProjectionMatrix();
+	renderer.setSize(width, height);
+}
+
+
+function init(){
+	createScene();
+	createLights();
+	createBox();
+
+	loop();
+}
+
+function loop(){ // UTILISER LES ROTATIONS POUR BIEN VOIR LES AXES 
+	stats.begin();
+
+
+	renderer.render(scene, camera);
+
+	stats.end();
+	requestAnimationFrame(loop);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+document.onclick = function(e){
+	console.log(array)
+	array.group.children[19].geometry.faces[6].color.setHex( 0xff0000)
+	array.group.children[19].geometry.vertices[0].y += 1
+	array.group.children[18].geometry.colorsNeedUpdate = true;
+	array.group.children[19].geometry.verticesNeedUpdate = true;
+}
+
+document.onkeydown = function pression(e){		
+	if(e.keyCode == 90){camera.position.z -= 5;}
+	if(e.keyCode == 83){camera.position.z += 5;}
+	if(e.keyCode == 81){camera.position.x -= 5;}
+	if(e.keyCode == 68){camera.position.x += 5;}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var scene, fieldOfView, aspectRatio, height, width, nearPlane, farPlane, renderer, container;
+function createScene(){
+	height = window.innerHeight;
+	width = window.innerWidth;
+
+	scene = new THREE.Scene();
+
+	scene.fog = new THREE.Fog(0xf7d9aa, 100, 950);
+
+	aspectRatio = width / height;
+	fieldOfView = 60;
+	nearPlane = 1;
+	farPlane = 10000;
+
+	camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
+
+	camera.position.x = 30; // gauche/droite
+	camera.position.z = 30; // profondeur
+	camera.position.y =0; // hauteur
+
+	renderer = new THREE.WebGLRenderer({ // voir tous les arguments existants
+		alpha: true,
+		antialias: true
+	});
+
+	renderer.setSize(width, height);
+
+	renderer.shadowMap.enabled = true;
+
+	container = document.getElementById('jeu'); // REMPLACER PAR JQUERY
+	container.appendChild(renderer.domElement);
+
+	window.addEventListener('resize', resize, false); 
+}
+
+var hemisphereLight, shadowLight;
+function createLights(){
+	hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9); // VOIR .9 ET 0.9 ?
+	shadowLight = new THREE.DirectionalLight(0xffffff, 0.9);
+
+	shadowLight.position.set(150, 350, 350);
+	shadowLight.castShadow = true;
+
+	shadowLight.shadow.camera.left = -400;
+	shadowLight.shadow.camera.right = 400;
+	shadowLight.shadow.camera.top = 400;
+	shadowLight.shadow.camera.bottom = -400;
+	shadowLight.shadow.camera.near = 1;
+	shadowLight.shadow.camera.far = 1000;
+
+	shadowLight.shadow.mapSize.width = 2048;
+	shadowLight.shadow.mapSize.height = 2048;
+
+	scene.add(hemisphereLight);  
+	scene.add(shadowLight);
+}
+</script>
