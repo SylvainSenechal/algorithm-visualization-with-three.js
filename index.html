@@ -171,16 +171,14 @@ function switchBox(b1, b2){ // !! voir la gestion du sens (switch(3 ,1), switch(
 	}
 }
 
-
-function tri(array){
-
+function triBubble(array){
 	if(stillMoving == true){
 			switchBox(indexToSort1, indexToSort2);
 	}
 	else{
 		var trie = true;
 		for(i=0; i<sizeArrayOfBox-1; i++){
-			if(arrayToSort[i]>arrayToSort[i+1]){
+			if(array[i]>array[i+1]){
 				trie = false; break;
 			}
 		}
@@ -188,16 +186,50 @@ function tri(array){
 	if(trie == false){
 		stillMoving = true;
 		for(i=0; i<sizeArrayOfBox-1; i++){
-			if(arrayToSort[i]>arrayToSort[i+1]){
-				var tmp = arrayToSort[i];
-				arrayToSort[i] = arrayToSort[i+1];
-				arrayToSort[i+1] = tmp;
+			if(array[i]>array[i+1]){
+				var tmp = array[i];
+				array[i] = array[i+1];
+				array[i+1] = tmp;
 
 				indexToSort1 = i;
 				indexToSort2 = i+1;
 				break;
 			}
 		}
+	}
+}
+
+var iPreced = 0;
+var min = 0;
+function triSelection(array){
+	if(stillMoving == true){
+			switchBox(indexToSort1, indexToSort2);
+	}
+	else{
+		var trie = true;
+		for(i=0; i<sizeArrayOfBox-1; i++){
+			if(array[i]>array[i+1]){
+				trie = false; break;
+			}
+		}
+	}
+	if(trie == false){
+		stillMoving = true;
+		min = iPreced;
+		
+		for(j=iPreced; j<sizeArrayOfBox; j++){
+			if(array[j]<array[min]){
+				min = j;
+			}
+		}
+
+		var tmp = array[iPreced];
+		array[iPreced] = array[min];
+		array[min] = tmp;
+
+		indexToSort1 = iPreced;
+		indexToSort2 = min;
+		iPreced +=1;
 	}
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,8 +290,8 @@ function init2(font){
 
 function loop(){ // UTILISER LES ROTATIONS POUR BIEN VOIR LES AXES 
 	stats.begin();
-	tri(arrayToSort)
-
+	//triBubble(arrayToSort)
+	triSelection(arrayToSort)
 	//camera.lookAt(nb.mesh.position)
 	renderer.render(scene, camera);
 
