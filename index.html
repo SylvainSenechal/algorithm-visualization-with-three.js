@@ -44,7 +44,7 @@ document.body.appendChild( stats.dom );
 
 
 var sizeBox = 2;
-var sizeArrayOfBox = 40;
+var sizeArrayOfBox = 80;
 
 
 function arrayOfBox(font, xOffset, txt){
@@ -118,7 +118,7 @@ function createArrayToSort(){
 
 
 var stillMoving = true;
-var movingSpeed = 1; // ajouter js.GUI pour vitesse logarithmique 1, 0.1, 0.01, ... etc
+var movingSpeed = 2; // ajouter js.GUI pour vitesse logarithmique 1, 0.1, 0.01, ... etc
 
 var avancementX = 0;
 var avancementYend = sizeBox;
@@ -239,11 +239,51 @@ function triSelection(array){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // AJOUTER UN DEPLACEMENT SMOOTH COMME SUR LE CANVA TEST AVEC LES BULLES
-document.onkeydown = function pression(e){		
+/*document.onkeydown = function pression(e){		
 	if(e.keyCode == 90){camera.position.z -= 1;}
 	if(e.keyCode == 83){camera.position.z += 1;}
 	if(e.keyCode == 81){camera.position.x -= 1;}
 	if(e.keyCode == 68){camera.position.x += 1;}
+}*/
+
+
+var haut, bas, droite, gauche;
+var vitesseX = 0;
+var vitesseY = 0;
+document.onkeydown = function pression(e){			
+	if(e.keyCode == 90){ haut 	= 	true; }
+	if(e.keyCode == 68){ droite = 	true; }
+	if(e.keyCode == 83){ bas 	= 	true; }
+	if(e.keyCode == 81){ gauche = 	true; }
+}
+document.onkeyup = function relache(e){
+	if(e.keyCode == 90){ haut 	= 	false; }
+	if(e.keyCode == 68){ droite = 	false; }
+	if(e.keyCode == 83){ bas 	=	false; }
+	if(e.keyCode == 81){ gauche = 	false; }
+}
+
+
+
+function vitesse(){
+	if(haut 	== true && vitesseY > -1)	{ vitesseY-=0.2; }
+	if(droite 	== true && vitesseX < +1)	{ vitesseX+=0.2; }
+	if(bas 		== true && vitesseY < +1)	{ vitesseY+=0.2; }
+	if(gauche 	== true && vitesseX > -1)	{ vitesseX-=0.2; }
+
+	if(-0.01 < vitesseX && vitesseX < 0.01)	{ vitesseX = 0 }
+	else {
+		if(vitesseX > 0)					{ vitesseX -= 0.05; }
+		else if(vitesseX < 0)				{ vitesseX += 0.05; }
+	}
+
+	if(-0.01 < vitesseY && vitesseY < 0.01)	{ vitesseY = 0 }
+	else {
+		if(vitesseY > 0)					{ vitesseY -= 0.05; }
+		else if(vitesseY < 0)				{ vitesseY += 0.05; }
+	}
+	camera.position.x += vitesseX;
+	camera.position.z += vitesseY;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -290,6 +330,7 @@ function init2(font){
 
 function loop(){ // UTILISER LES ROTATIONS POUR BIEN VOIR LES AXES 
 	stats.begin();
+	vitesse();
 	//triBubble(arrayToSort)
 	triSelection(arrayToSort)
 	//camera.lookAt(nb.mesh.position)
@@ -321,8 +362,8 @@ function createScene(){
 
 	camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
 
-	camera.position.x = 40; // gauche/droite
-	camera.position.z = 30; // profondeur
+	camera.position.x = 80; // gauche/droite
+	camera.position.z = 60; // profondeur
 	camera.position.y =0; // hauteur
 
 	renderer = new THREE.WebGLRenderer({ // voir tous les arguments existants
