@@ -1,0 +1,371 @@
+<html>
+	<head>
+		<title>Sorting algo visualization</title>
+		<div id="jeu"></div>
+		<style>
+			#jeu {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background: linear-gradient(#e4e0ba, #f7d9aa); /* première valeur en haut, deuxième qui s'étend vers le bas */
+				/*cursor : none;*/
+			}
+			#mon_canvas {
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			html, body {
+		      margin: 0px;
+		      border: 0px;
+		      overflow: hidden; /*  Disable scrollbars */
+		      display: block;  /* No floating content on sides */
+		    }
+
+		</style>
+	</head>
+	<body>
+		<canvas id="mon_canvas"> not supported </canvas>
+	</body>
+</html>
+
+
+<script src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js'></script>
+<script src='https://threejs.org/build/three.min.js'></script>
+<script>// type="text/javascript" src="threejs.js"></script>
+<script>// src="stats/build/stats.min.js"></script>
+
+
+
+
+<script>
+	// Couleur violette :background: linear-gradient(#8416c3, #4e146f);
+	// le fog doit avoir la même couleur que le background pour être propre
+</script>
+
+
+<script>
+
+
+var canvas = document.getElementById('mon_canvas');
+var ctx = canvas.getContext('2d');
+var wdt = window.innerWidth;
+var hgt = window.innerHeight; 
+ctx.canvas.width = wdt;
+ctx.canvas.height = hgt;
+
+
+
+
+/*
+var loader = new THREE.ImageLoader();
+loader.load('bombardier.png', function(image){
+	ctx.drawImage(image, 100, 930)
+
+});*/
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// IDEES 
+// encapsuler tout l'algo dans une box full transparente pour pouvoir déplacer en bloc avec un raycaster pour détecter quand la souris arrive sur ce bloc et faire un drag&drop
+var stats = new Stats();
+stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+document.body.appendChild( stats.dom ); 
+
+
+var sizeBox = 5;
+var sizeArrayOfBox = 20;
+function arrayOfBox(){
+	this.mesh = new THREE.Object3D();
+
+	var material = new THREE.MeshPhongMaterial({
+		color: 0x68c3c0,
+		transparent:true,
+		opacity:0.5,
+		vertexColors: THREE.FaceColors,
+		shading:THREE.FlatShading,
+		side: THREE.DoubleSide,
+		//emissive: 0x0000ff
+	});
+
+	for(i = 0; i<sizeArrayOfBox; i++){
+		var geometry = new THREE.BoxGeometry(sizeBox, sizeBox, sizeBox);
+		var box = new THREE.Mesh(geometry, material);
+
+		box.position.x = i*sizeBox; // + i; ?d
+		//box.castShadow = true;
+		//box.receiveShadow = true;
+		this.mesh.add(box);
+	}
+}
+
+var drawnArray;
+function createArrayOfBox(){
+	drawnArray = new arrayOfBox();
+	scene.add(drawnArray.mesh);
+}
+
+var arrayToSort = [];
+var min = 0;
+var max = 100;
+function createArrayToSort(){
+	for(i = 0; i<sizeArrayOfBox; i++){
+		arrayToSort[i] = Math.trunc(Math.random() * 100);
+	}
+	console.log(arrayToSort)
+}
+
+function Numbers(){
+	var x = 0, y = 0;
+
+	var heartShape = new THREE.Shape();
+
+	heartShape.moveTo( x + 5, y + 5 );
+	heartShape.bezierCurveTo( x + 5, y + 5, x + 4, y, x, y );
+	heartShape.bezierCurveTo( x - 6, y, x - 6, y + 7,x - 6, y + 7 );
+	heartShape.bezierCurveTo( x - 6, y + 11, x - 3, y + 15.4, x + 5, y + 19 );
+	heartShape.bezierCurveTo( x + 12, y + 15.4, x + 16, y + 11, x + 16, y + 7 );
+	heartShape.bezierCurveTo( x + 16, y + 7, x + 16, y, x + 10, y );
+	heartShape.bezierCurveTo( x + 7, y, x + 5, y + 5, x + 5, y + 5 );
+
+	var extrudeSettings = { amount: 8, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 1, bevelThickness: 1 };
+
+	var geometry = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
+
+	this.mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial() );
+	
+	//this.mesh = new THREE.Mesh(geometry, material);
+}
+
+var nb;
+function createNumbers(num){
+	if(num == 0){
+		nb = new zeroMesh();
+		nb.mesh.position.set(25,0,0)
+		scene.add(nb.mesh)
+	}
+	if(num == 1){
+		nb = new oneMesh();
+		nb.mesh.position.set(25,0,0)
+		scene.add(nb.mesh)
+	}
+	if(num == 2){
+		nb = new twoMesh();
+		nb.mesh.position.set(25,0,0)
+		scene.add(nb.mesh)
+	}
+	if(num == 3){
+		nb = new testMesh();
+		nb.mesh.position.set(25,0,0)
+		scene.add(nb.mesh)
+	}
+
+}
+
+
+function oneMesh(){
+	var oneShape = new THREE.Shape();
+
+	oneShape.moveTo(0, 0);
+	oneShape.lineTo(1, 0);
+	oneShape.lineTo(1, 3);
+	oneShape.lineTo(-1, 2);
+	oneShape.lineTo(-0.8, 1.5);
+	oneShape.lineTo(0, 2)
+	oneShape.lineTo(0, 0)
+
+	var extrudeSettings = { amount: 1, bevelEnabled: true, bevelSegments: 10, steps: 1, bevelSize: 0.3, bevelThickness: 1 };
+	var geometry = new THREE.ExtrudeGeometry( oneShape, extrudeSettings );
+	this.mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial({color: 0xff0000}) );
+	this.mesh.scale.set(0.5, 0.5, 0.5);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+document.onclick = function(e){
+	drawnArray.mesh.children[3].geometry.faces[6].color.setHex( 0xff0000)
+	//drawnArray.mesh.children[3].geometry.vertices[0].y += 1;
+	drawnArray.mesh.children[3].position.y += 1;
+	drawnArray.mesh.children[3].geometry.colorsNeedUpdate = true;
+	drawnArray.mesh.children[3].geometry.verticesNeedUpdate = true;
+	//		drawnArray[0].mesh.children[0].geometry.faces[6].color.setHex( 0xff0000)
+	//drawnArray[0].mesh.children[0].position.y += 1; // cube
+	//		drawnArray[0].mesh.children[1].position.y += 1; // nombre
+
+	//drawnArray[0].mesh.children[0].geometry.colorsNeedUpdate = true; // couleur carré
+	//drawnArray[0].mesh.children[0].geometry.verticesNeedUpdate = true; // ? pas besoin car c'est pas la géométrie qui est update
+	// mais la position globale
+}
+
+// AJOUTER UN DEPLACEMENT SMOOT COMME SUR LE CANVA TEST AVEC LES BULLES
+document.onkeydown = function pression(e){		
+	if(e.keyCode == 90){camera.position.z -= 5;}
+	if(e.keyCode == 83){camera.position.z += 5;}
+	if(e.keyCode == 81){camera.position.x -= 5;}
+	if(e.keyCode == 68){camera.position.x += 5;}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+window.addEventListener('load', init, false); // voir l'argument false ?
+
+function resize(){
+	height = window.innerHeight;
+	width = window.innerWidth;
+	camera.aspect = width / height;
+	camera.updateProjectionMatrix();
+	renderer.setSize(width, height);
+}
+function init(){
+	var loader = new THREE.FontLoader();
+	loader.load( 'helvetiker_regular.typeface.json', function ( ft ) {
+		init2(ft)
+	})
+}
+
+function cl(ft){
+
+		var geometry;
+
+	
+	geometry = new THREE.TextGeometry( 'Hello three.js!', {
+		font: ft,
+		size: 10,
+		height: 0.5,
+		curveSegments: 12,
+		bevelEnabled: true,
+		bevelThickness: 1,
+		bevelSize: 0.8,
+		bevelSegments: 5
+	} );
+	var material = new THREE.MeshPhongMaterial({
+		color: 0x68c3c0,
+		transparent:true,
+		opacity:0.5,
+		//vertexColors: THREE.FaceColors,
+		//shading:THREE.FlatShading,
+		side: THREE.DoubleSide,
+		//emissive: 0x0000ff
+	});
+	console.log(geometry)
+	var mesh = new THREE.Mesh(geometry, material );
+	mesh.position.set(20,0,6)
+	mesh.receiveShadow = true;
+	scene.add(mesh)
+	camera.lookAt(mesh.position)
+	
+	
+}
+
+function init2(ft){
+	
+	createScene();
+	createLights();
+	/*
+	var texture = new THREE.TextureLoader().load( 'bombardier.png' , function(texture){
+			var material = new THREE.MeshPhongMaterial( { map: texture,overdraw: 0.5 } );
+	var geometry = new THREE.BoxGeometry(5, 5, 5);
+	var mesh = new THREE.Mesh( geometry, material );
+	mesh.position.set(0,0,6)
+	scene.add(mesh)
+	});*/
+	
+	document.addEventListener("click", function(){cl(ft)} , true);
+
+
+
+	
+	
+	createArrayOfBox();
+	createArrayToSort();
+	//createNumbers(1);
+
+	loop();
+}
+
+function loop(){ // UTILISER LES ROTATIONS POUR BIEN VOIR LES AXES 
+	stats.begin();
+
+
+	renderer.render(scene, camera);
+
+	stats.end();
+	requestAnimationFrame(loop);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var scene, fieldOfView, aspectRatio, height, width, nearPlane, farPlane, renderer, container;
+function createScene(){
+	height = window.innerHeight;
+	width = window.innerWidth;
+
+	scene = new THREE.Scene();
+
+	scene.fog = new THREE.Fog(0xf7d9aa, 100, 950);
+
+	aspectRatio = width / height;
+	fieldOfView = 60;
+	nearPlane = 1;
+	farPlane = 10000;
+
+	camera = new THREE.PerspectiveCamera(fieldOfView, aspectRatio, nearPlane, farPlane);
+
+	camera.position.x = 30; // gauche/droite
+	camera.position.z = 30; // profondeur
+	camera.position.y =0; // hauteur
+
+	renderer = new THREE.WebGLRenderer({ // voir tous les arguments existants
+		alpha: true,
+		antialias: true
+	});
+
+	renderer.setSize(width, height);
+
+	renderer.shadowMap.enabled = true;
+
+	container = document.getElementById('jeu'); // REMPLACER PAR JQUERY
+	container.appendChild(renderer.domElement);
+
+	window.addEventListener('resize', resize, false); 
+}
+
+var hemisphereLight, shadowLight;
+function createLights(){
+	hemisphereLight = new THREE.HemisphereLight(0xaaaaaa, 0x000000, 0.9); // VOIR .9 ET 0.9 ?
+	shadowLight = new THREE.DirectionalLight(0xffffff, 0.9);
+
+	shadowLight.position.set(150, 350, 350);
+	shadowLight.castShadow = true;
+
+	shadowLight.shadow.camera.left = -400;
+	shadowLight.shadow.camera.right = 400;
+	shadowLight.shadow.camera.top = 400;
+	shadowLight.shadow.camera.bottom = -400;
+	shadowLight.shadow.camera.near = 1;
+	shadowLight.shadow.camera.far = 1000;
+
+	shadowLight.shadow.mapSize.width = 2048;
+	shadowLight.shadow.mapSize.height = 2048;
+
+	scene.add(hemisphereLight);  
+	scene.add(shadowLight);
+}
+</script>
